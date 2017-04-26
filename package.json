@@ -1,0 +1,37 @@
+{
+  "name": "niemo",
+  "version": "1.0.0",
+  "description": "NIEM conversion utilities",
+  "main": "index.js",
+  "scripts": {
+    "preinstall": "scripts/preinstall.js",
+    "test": "test",
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TJKoury/niemo.git"
+  },
+  "keywords": [
+    "NIEM",
+    "JSON-LD",
+    "schema",
+    "ontology"
+  ],
+  "author": "TJKoury",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TJKoury/niemo/issues"
+  },
+  "homepage": "https://github.com/TJKoury/niemo#readme",
+  "devDependencies": {
+    "nodemon": "^1.11.0"
+  },
+  "dependencies": {
+    "htmlparser2": "^3.9.2",
+    "jsonld": "^0.4.12",
+    "knex": "^0.12.9",
+    "sqlite3": "^3.1.8",
+    "xlsx": "^0.9.12"
+  }
+}
