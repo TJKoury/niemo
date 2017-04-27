@@ -5,32 +5,33 @@ const niemWorkbook = xlsx.readFile('./schemas/niem/niem.xlsx');
 var niemo = function(){};
 
 
-niemo.prototype.getProperty = function(propertyName, prefix){
+niemo.prototype.getProperty = function(propertyName, namespace){
+    if(!namespace){
+        [namespace, propertyName] = propertyName.split(":");
+    }
+
     var properties = xlsx.utils.sheet_to_json(niemWorkbook.Sheets["Property"]);
     var _property = null;
     for(var p=0;p<properties.length;p++){
-        if(properties[p].PropertyName === propertyName && properties[p].PropertyNamespacePrefix === prefix){
+        if(properties[p].PropertyName === propertyName && properties[p].PropertyNamespacePrefix === namespace){
             _property = properties[p];
             break;
         }
     };
     return _property;
-}
-niemo.prototype.getPrefixes = function(){
-    return xlsx.utils.sheet_to_json(niemWorkbook.Sheets["Namespace"]);
 };
 
-niemo.prototype.getTypes = function(){
-    return xlsx.utils.sheet_to_json(niemWorkbook.Sheets["Type"]);
-}
+niemo.prototype.getType = function(typeName, namespace){
+    if(!namespace){
+        [namespace, propertyName] = typeName.split(":");
+    }
 
-niemo.prototype.getType = function(typeName, prefix){
-    
     var types = this.getTypes();
     var validType = false;
     for(var _t=0;_t<types.length;_t++){
-        if(types[_t].TypeName === typeName && prefix === types[_t].TypeNamespacePrefix){
-            validType = true;
+        if(types[_t].TypeName === typeName && namespace === types[_t].TypeNamespacePrefix){
+            
+            validType = types[_t];
             break;
         }
     }
@@ -40,17 +41,44 @@ niemo.prototype.getType = function(typeName, prefix){
     }
     
     var typemap = xlsx.utils.sheet_to_json(niemWorkbook.Sheets["TypeContainsProperty"]).filter(function(a){
-        return a.TypeName === typeName && a.TypeNamespacePrefix === prefix;
+        return a.TypeName === typeName && a.TypeNamespacePrefix === namespace;
     });
-    return typemap;
+    return [validType, typemap];
+};
+
+niemo.prototype.getTypes = function(){
+    return xlsx.utils.sheet_to_json(niemWorkbook.Sheets["Type"]);
+}
+
+niemo.prototype.getProperties = function(){
+    return xlsx.utils.sheet_to_json(niemWorkbook.Sheets["Property"]);
+};
+
+niemo.prototype.getFacets = function(){
+    return xlsx.utils.sheet_to_json(niemWorkbook.Sheets["Facet"]);
+};
+
+niemo.prototype.getNamespaces = function(){
+    return xlsx.utils.sheet_to_json(niemWorkbook.Sheets["Namespace"]);
+};
+
+niemo.prototype.createXMLSchema = function(){
+    
 }
 
 var t = new niemo();
 
-t.getType("PersonType", "nc").forEach(function(a){
-    var _p = t.getProperty(a.PropertyName, a.PropertyNamespacePrefix);
-    console.log(_p.PropertyNamespacePrefix+":"+_p.PropertyName, _p.Definition);
-
-});
-
+var queryProperty = t.getProperty("cyfs:PersonOtherKinAssociation");
+console.log(queryProperty.PropertyNamespacePrefix+":"+queryProperty.TypeName);
+var queryType = t.getType(queryProperty.TypeName, queryProperty.PropertyNamespacePrefix);
+//console.log(queryType);
+if(Array.isArray(queryType[1])){
+    queryType[1].forEach(function(a){
+        var _p = t.getProperty(a.PropertyName, a.PropertyNamespacePrefix);
+        console.log(_p.PropertyNamespacePrefix+":"+_p.PropertyName);
+        console.log(_p);
+        var _pt = t.getType(_p.TypeName, _p.PropertyNamespacePrefix);
+        console.log(_pt)
+    });
+}
 module.exports = {};
