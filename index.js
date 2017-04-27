@@ -1,4 +1,3 @@
-const htmlparser = require('htmlparser2');
 const xlsx = require('xlsx');
 const jsonld = require('jsonld');
 const niemWorkbook = xlsx.readFile('./schemas/niem/niem.xlsx');
@@ -23,7 +22,7 @@ niemo.prototype.getProperty = function(propertyName, namespace){
 
 niemo.prototype.getType = function(typeName, namespace){
     if(!namespace){
-        [namespace, propertyName] = typeName.split(":");
+        [namespace, typeName] = typeName.split(":");
     }
 
     var types = this.getTypes();
@@ -62,7 +61,19 @@ niemo.prototype.getNamespaces = function(){
     return xlsx.utils.sheet_to_json(niemWorkbook.Sheets["Namespace"]);
 };
 
-niemo.prototype.createXMLSchema = function(){
+niemo.prototype.createXMLSchema = function(name, namespace){
+    if(!namespace){
+        [namespace, name] = typeName.split(":");
+    }
+}
+
+niemo.prototype.createXMLTemplate = function(name, namespace){
+    if(!namespace){
+        [namespace, name] = typeName.split(":");
+    }
+}
+
+niemo.prototype.createJSONLDTemplate = function(){
     
 }
 
