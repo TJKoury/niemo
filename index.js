@@ -60,10 +60,11 @@ niemo.prototype.getType = function(typeName, namespace, children){
     }
 
     if(_type && children){
+        _type.children = [];
         var typemap = xlsx.utils.sheet_to_json(niemWorkbook.Sheets["TypeContainsProperty"]).filter(function(a){
             return a.TypeName === typeName && a.TypeNamespacePrefix === namespace;
         }).forEach(function(c){
-            _type[c.TypeName] = c;
+            _type.children.push(c);
         });
     }
 
@@ -136,15 +137,30 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
         [namespace, name] = name.split(":");
     };
 
-
+    var _namespaces = this.getNamespaces();
+    _namespaces.forEach((n)=>{
+        if(n.NamespacePrefix === "xml" || n.NamespacePrefix === "xs"){
+            //console.log(n);
+        }
+    })
 
     var _type = this.getType(typeName, namespace, true);
+    //console.log(_type);
     var contentStyle = {
-        "CCC":""
+        "CCC":["complexType", "complexContent"],
+        "CSC":["complexType", "simpleContent"],
+        "S":["simpleType", "simpleContent"]
     };
+
     console.log(_type);
 
     var root = element("xs:schema");
+    /*TODO Get all namespaces root.set('xmlns', 'http://www.w3.org/2005/Atom');*/
+    var annotation = subElement(root, "xs:annotation");
+    var documentation = subElement(annotation, "xs:documentation");
+    documentation.text = _type.Definition;
+    
+
 
     return (new ElementTree(root)).write({'xml_declaration': false});
 
