@@ -1,7 +1,7 @@
 const xlsx = require('xlsx');
 const jsonld = require('jsonld');
 const niemWorkbook = xlsx.readFile('./schemas/niem/niem.xlsx');
-const elementtree = require('elementtree');
+const et = require('elementtree');
 
 /**
  * Represents a new niemo object.
@@ -126,21 +126,31 @@ niemo.prototype.getNamespaces = function(){
  * @param {string} namespace - The namespace in which to look for the type 
  */
 
-niemo.prototype.createTypeXMLElement = function(name, namespace){
+niemo.prototype.createTypeXSDElement = function(typeName, namespace){
 
-    /* This is for Types
-     *
-     * 
-     * */
     var ElementTree = et.ElementTree;
-var element = et.Element;
-var subElement = et.SubElement; 
+    var element = et.Element;
+    var subElement = et.SubElement; 
+    
     if(!namespace){
         [namespace, name] = name.split(":");
-    }
+    };
+
+
+
+    var _type = this.getType(typeName, namespace, true);
+    var contentStyle = {
+        "CCC":""
+    };
+    console.log(_type);
+
+    var root = element("xs:schema");
+
+    return (new ElementTree(root)).write({'xml_declaration': false});
+
 }
 
-niemo.prototype.createPropertyXMLElement = function(name, namespace){
+niemo.prototype.createPropertyXSDElement = function(name, namespace){
 
     // This is for Properties, to generate the xs:element found in the core xsd
     //  <xs:element name="Person" type="nc:PersonType" nillable="true">
@@ -185,7 +195,7 @@ if(Array.isArray(queryType[1])){
 };
 */
 
-console.log(t.getType("AircraftType", "nc", "true"));
+console.log(t.createTypeXSDElement("AircraftType", "nc"));
 
 
 module.exports = {};
