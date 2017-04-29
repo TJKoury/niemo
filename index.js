@@ -112,7 +112,7 @@ niemo.prototype.getNamespaces = function(){
  */
 
 niemo.prototype.getStructures = function(){
-    return xlsx.utils.getTypes(false, "structures");
+    return this.getTypes(false, "structures");
 };
 
 ///////////////////////////////
@@ -173,15 +173,24 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
     var content = subElement(mainElement, "xs:"+_cs[1]);
     var extension = subElement(content, "xs:extension");
     var simpleAG = false;
+    
     if(!_type.ParentQualifiedType){
+        var _structures = this.getStructures();
+        _structures.forEach(function(_s){
+            if(_s.TypeName === _type.TypeName){
+                _type.ParentQualifiedType = _s.QualifiedType;
+            }
+        });
         simpleAG = true;
         var types = this.getTypes();
         types.forEach(function(_simpleType){
             if(_simpleType.SimpleTypeName === _type.TypeName){
                 _type.ParentQualifiedType = _simpleType.QualifiedType;
-                _type.children.push()
             }
-        })
+        });
+        if(!_type.ParentQualifiedType){
+            _type.ParentQualifiedType = "structures:ObjectType"; //Default type to inherit from, I'm guessing
+        }
     }
     extension.set("base", _type.ParentQualifiedType);
     
@@ -191,7 +200,7 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
     }
 
     _type.children.forEach(function(_c){
-        var _x = subElement(contentSequence, "xs:element");
+        var _x = subElement(attributes, "xs:element");
         _x.set("ref", _c.QualifiedProperty);
         _x.set("minOccurs", _c.MinOccurs);
         _x.set("maxOccurs", _c.MaxOccurs);
@@ -249,7 +258,7 @@ if(Array.isArray(queryType[1])){
 };
 */
 
-console.log(pd.xml(t.createTypeXSDElement("AngularMinuteType", "nc")));
+console.log(pd.xml(t.createTypeXSDElement("AssociationType", "nc")));
 
 
 module.exports = {};
