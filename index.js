@@ -2,7 +2,7 @@ const xlsx = require('xlsx');
 const jsonld = require('jsonld');
 const niemWorkbook = xlsx.readFile('./schemas/niem/niem.xlsx');
 const et = require('elementtree');
-
+const pd = require("pretty-data").pd;
 /**
  * Represents a new niemo object.
  * @constructor
@@ -14,9 +14,9 @@ var niemo = function(ontology){
 };
 
 /**
- * Retrieve a property by name and namespace
+ * Returns a property by name and namespace
  *
- * @param {string} propertyName - The name of the property to retrieve 
+ * @param {string} propertyName - The name of the property to Returns 
  * @param {string} namespace - The namespace in which to look for the property 
  */
 
@@ -37,9 +37,9 @@ niemo.prototype.getProperty = function(propertyName, namespace){
 };
 
 /**
- * Retrieve a type by name and namespace
+ * Returns a type by name and namespace
  *
- * @param {string} typeName - The name of the type to retrieve 
+ * @param {string} typeName - The name of the type to Returns 
  * @param {string} namespace - The namespace in which to look for the type 
  * @param {boolean} children - Return the children of the type as well
  */
@@ -52,7 +52,11 @@ niemo.prototype.getType = function(typeName, namespace, children){
     var types = this.getTypes();
     var _type = null;
     for(var _t=0;_t<types.length;_t++){
-        if(types[_t].TypeName === typeName && namespace === types[_t].TypeNamespacePrefix){
+        if((
+            (typeName && types[_t].TypeName === typeName ) ||
+            (!typeName && namespace)
+           ) &&
+            namespace === types[_t].TypeNamespacePrefix){
             
             _type = types[_t];
             break;
@@ -72,7 +76,7 @@ niemo.prototype.getType = function(typeName, namespace, children){
 };
 
 /**
- * Retrieve all types
+ * Returns all types
  */
 
 niemo.prototype.getTypes = function(){
@@ -80,7 +84,7 @@ niemo.prototype.getTypes = function(){
 }
 
 /**
- * Retrieve all properties
+ * Returns all properties
  */
 
 niemo.prototype.getProperties = function(){
@@ -88,7 +92,7 @@ niemo.prototype.getProperties = function(){
 };
 
 /**
- * Retrieve all facets
+ * Returns all facets
  */
 
 niemo.prototype.getFacets = function(){
@@ -96,18 +100,25 @@ niemo.prototype.getFacets = function(){
 };
 
 /**
- * Retrieve all namespaces
+ * Returns all namespaces
  */
 
 niemo.prototype.getNamespaces = function(){
     return xlsx.utils.sheet_to_json(niemWorkbook.Sheets["Namespace"]);
 };
 
+/**
+ * Returns all structures
+ */
+
+niemo.prototype.getStructures = function(){
+    return xlsx.utils.getTypes(false, "structures");
+};
 
 ///////////////////////////////
 
 /**
- * Retrieve a type by name and namespace and convert it to NIEM XML
+ * Returns a type by name and namespace and convert it to NIEM XML
  *
  * <xs:complexType name="PersonType">
  *   <xs:annotation>
@@ -123,7 +134,7 @@ niemo.prototype.getNamespaces = function(){
  *   </xs:complexContent>
  * </xs:complexType>
  * 
- * @param {string} name - The name of the type to retrieve 
+ * @param {string} name - The name of the type to Returns 
  * @param {string} namespace - The namespace in which to look for the type 
  */
 
@@ -145,24 +156,51 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
     })
 
     var _type = this.getType(typeName, namespace, true);
-    //console.log(_type);
+
     var contentStyle = {
         "CCC":["complexType", "complexContent"],
         "CSC":["complexType", "simpleContent"],
         "S":["simpleType", "simpleContent"]
     };
-
     console.log(_type);
-
     var root = element("xs:schema");
     /*TODO Get all namespaces root.set('xmlns', 'http://www.w3.org/2005/Atom');*/
-    var annotation = subElement(root, "xs:annotation");
+    var _cs = contentStyle[_type.ContentStyle];
+    var mainElement = subElement(root, "xs:"+_cs[0]);
+    mainElement.set("name", _type.TypeNamespacePrefix+":"+_type.TypeName);
+    var annotation = subElement(mainElement, "xs:annotation");
     var documentation = subElement(annotation, "xs:documentation");
+    var content = subElement(mainElement, "xs:"+_cs[1]);
+    var extension = subElement(content, "xs:extension");
+    var simpleAG = false;
+    if(!_type.ParentQualifiedType){
+        simpleAG = true;
+        var types = this.getTypes();
+        types.forEach(function(_simpleType){
+            if(_simpleType.SimpleTypeName === _type.TypeName){
+                _type.ParentQualifiedType = _simpleType.QualifiedType;
+                _type.children.push()
+            }
+        })
+    }
+    extension.set("base", _type.ParentQualifiedType);
+    
+    var attributes = simpleAG? subElement(extension, "xs:attributeGroup") : subElement(extension, "xs:sequence");
+    if(simpleAG){
+        attributes.set("ref", "structures:SimpleObjectAttributeGroup");
+    }
+
+    _type.children.forEach(function(_c){
+        var _x = subElement(contentSequence, "xs:element");
+        _x.set("ref", _c.QualifiedProperty);
+        _x.set("minOccurs", _c.MinOccurs);
+        _x.set("maxOccurs", _c.MaxOccurs);
+    })
     documentation.text = _type.Definition;
     
 
 
-    return (new ElementTree(root)).write({'xml_declaration': false});
+    return (new ElementTree(root)).write({'xml_declaration': true});
 
 }
 
@@ -211,7 +249,7 @@ if(Array.isArray(queryType[1])){
 };
 */
 
-console.log(t.createTypeXSDElement("AircraftType", "nc"));
+console.log(pd.xml(t.createTypeXSDElement("AngularMinuteType", "nc")));
 
 
 module.exports = {};
