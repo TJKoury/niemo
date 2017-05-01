@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "preinstall": "scripts/preinstall.js",
-    "test": "test",
-    "dev": "nodemon index.js"
+    "test": "tape test/**/*.js",
+    "dev": "nodemon --exec npm test"
   },
   "repository": {
     "type": "git",
@@ -25,7 +25,8 @@
   },
   "homepage": "https://github.com/TJKoury/niemo#readme",
   "devDependencies": {
-    "nodemon": "^1.11.0"
+    "nodemon": "^1.11.0",
+    "tape": "^4.6.3"
   },
   "dependencies": {
     "htmlparser2": "^3.9.2",

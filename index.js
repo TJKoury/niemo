@@ -149,7 +149,9 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
     };
 
     var _type = this.getType(typeName, namespace, true);
-
+    if(!_type){
+        return null;
+    }
     var contentStyle = {
         "CCC":["complexType", "complexContent"],
         "CSC":["complexType", "simpleContent"],
@@ -256,28 +258,4 @@ niemo.prototype.createJSONLDTemplate = function(){
     
 }
 
-var t = new niemo();
-
-/*
-var queryProperty = t.getProperty("cyfs:PersonOtherKinAssociation");
-console.log(queryProperty.PropertyNamespacePrefix+":"+queryProperty.TypeName);
-var queryType = t.getType(queryProperty.TypeName, queryProperty.PropertyNamespacePrefix);
-//console.log(queryType);
-if(Array.isArray(queryType[1])){
-    queryType[1].forEach(function(a){
-        var _p = t.getProperty(a.PropertyName, a.PropertyNamespacePrefix);
-        console.log(_p.PropertyNamespacePrefix+":"+_p.PropertyName);
-        console.log(_p);
-        var _pt = t.getType(_p.TypeName, _p.PropertyNamespacePrefix);
-        console.log(_pt)
-    });
-};
-*/
-var _xsd = t.createTypeXSDElement("edxl-cap:AlertAdapterType");
-console.log(_xsd);
-if(_xsd){
-    console.log(pd.xml(_xsd));
-}
-
-
-module.exports = {};
+module.exports = niemo;
