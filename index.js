@@ -145,15 +145,8 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
     var subElement = et.SubElement; 
     
     if(!namespace){
-        [namespace, name] = name.split(":");
+        [namespace, typeName] = typeName.split(":");
     };
-
-    var _namespaces = this.getNamespaces();
-    _namespaces.forEach((n)=>{
-        if(n.NamespacePrefix === "xml" || n.NamespacePrefix === "xs"){
-            //console.log(n);
-        }
-    })
 
     var _type = this.getType(typeName, namespace, true);
 
@@ -162,12 +155,13 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
         "CSC":["complexType", "simpleContent"],
         "S":["simpleType", "simpleContent"]
     };
-    console.log(_type);
+   
     var root = element("xs:schema");
+
     /*TODO Get all namespaces root.set('xmlns', 'http://www.w3.org/2005/Atom');*/
     var _cs = contentStyle[_type.ContentStyle];
     var mainElement = subElement(root, "xs:"+_cs[0]);
-    mainElement.set("name", _type.TypeNamespacePrefix+":"+_type.TypeName);
+    mainElement.set("name", _type.TypeName);
     var annotation = subElement(mainElement, "xs:annotation");
     var documentation = subElement(annotation, "xs:documentation");
     var content = subElement(mainElement, "xs:"+_cs[1]);
@@ -198,8 +192,10 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
     if(simpleAG){
         attributes.set("ref", "structures:SimpleObjectAttributeGroup");
     }
-
+    var localns = {};
+    localns[_type.TypeNamespacePrefix] = true;
     _type.children.forEach(function(_c){
+        localns[_c.TypeNamespacePrefix] = true;
         var _x = subElement(attributes, "xs:element");
         _x.set("ref", _c.QualifiedProperty);
         _x.set("minOccurs", _c.MinOccurs);
@@ -208,6 +204,26 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
     documentation.text = _type.Definition;
     
 
+    /*Namespaces!*/
+    localns = Object.keys(localns);
+    var _namespaces = this.getNamespaces();
+    _namespaces.forEach((n)=>{
+        
+        if(n.NamespacePrefix === "xml" || n.NamespacePrefix === "xs" || localns.indexOf(n.NamespacePrefix)>-1){
+                if(n.NamespacePrefix === "xs"){
+                    root.set("Version", n.VersionReleaseNumber);
+                }
+                if(n.NamespacePrefix === _type.TypeNamespacePrefix){
+                  
+                    root.set("TargetNamespace", n.VersionURI);   
+                }
+                if(n.NamespacePrefix && n.VersionURI){
+                    console.log("xmlns:"+n.NamespacePrefix, n.VersionURI);
+                    root.set("xmlns:"+n.NamespacePrefix, n.VersionURI);
+                }
+           
+        }
+    })
 
     return (new ElementTree(root)).write({'xml_declaration': true});
 
@@ -257,8 +273,11 @@ if(Array.isArray(queryType[1])){
     });
 };
 */
-
-console.log(pd.xml(t.createTypeXSDElement("AssociationType", "nc")));
+var _xsd = t.createTypeXSDElement("edxl-cap:AlertAdapterType");
+console.log(_xsd);
+if(_xsd){
+    console.log(pd.xml(_xsd));
+}
 
 
 module.exports = {};
