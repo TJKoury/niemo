@@ -225,7 +225,10 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
                 }
            
         }
-    })
+    });
+
+    /* TODO schemaLocation */
+    /* TODO figure out conformancetargets */
 
     return (new ElementTree(root)).write({'xml_declaration': true});
 

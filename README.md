@@ -3,7 +3,12 @@ Conversion utilities for the [National Information Exchange Model (NIEM)](https:
 
 ## Overview
 
-NIEMO is a tool to aid in creating NIEM - compliant ontologies for operational systems.  This tool will support converting NIEM schemas to JSON Schema, JSON-LD templates, as well as SQL statements intended for database setup and migration.
+NIEMO is a tool to aid in creating NIEM - compliant ontologies for operational systems.  
+
+This tool will support converting NIEM schemas to:
+- [JSON Schema](http://json-schema.org)
+- [JSON-LD templates](json-ld.org)
+- Database schemas for database setup and migration
 
 ## Docs [(From NIEM Overview)](http://niem.github.io/iepd-starter-kit/)
 
