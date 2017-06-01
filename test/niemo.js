@@ -7,7 +7,7 @@ test('Create Type XSD', function (t) {
    
     var n = new niemo();
 
-    var _xsdt = n.createTypeXSDElement("edxl-cap:AlertAdapterType");
+    var _xsdt = n.createTypeXSDElement("nc:PersonType");
     t.notEqual(_xsdt, null);
     if(_xsdt){
         console.log(pd.xml(_xsdt));
