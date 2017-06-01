@@ -14,9 +14,9 @@ var niemo = function(ontology){
 };
 
 /**
- * Returns a property by name and namespace
+ * Return a property by name and namespace
  *
- * @param {string} propertyName - The name of the property to Returns 
+ * @param {string} propertyName - The name of the property to Return 
  * @param {string} namespace - The namespace in which to look for the property 
  */
 
@@ -37,9 +37,9 @@ niemo.prototype.getProperty = function(propertyName, namespace){
 };
 
 /**
- * Returns a type by name and namespace
+ * Return a type by name and namespace
  *
- * @param {string} typeName - The name of the type to Returns 
+ * @param {string} typeName - The name of the type to Return 
  * @param {string} namespace - The namespace in which to look for the type 
  * @param {boolean} children - Return the children of the type as well
  */
@@ -76,7 +76,7 @@ niemo.prototype.getType = function(typeName, namespace, children){
 };
 
 /**
- * Returns all types
+ * Return all types
  */
 
 niemo.prototype.getTypes = function(){
@@ -84,7 +84,7 @@ niemo.prototype.getTypes = function(){
 }
 
 /**
- * Returns all properties
+ * Return all properties
  */
 
 niemo.prototype.getProperties = function(){
@@ -92,7 +92,7 @@ niemo.prototype.getProperties = function(){
 };
 
 /**
- * Returns all facets
+ * Return all facets
  */
 
 niemo.prototype.getFacets = function(){
@@ -100,7 +100,7 @@ niemo.prototype.getFacets = function(){
 };
 
 /**
- * Returns all namespaces
+ * Return all namespaces
  */
 
 niemo.prototype.getNamespaces = function(){
@@ -108,7 +108,7 @@ niemo.prototype.getNamespaces = function(){
 };
 
 /**
- * Returns all structures
+ * Return all structures
  */
 
 niemo.prototype.getStructures = function(){
@@ -118,7 +118,7 @@ niemo.prototype.getStructures = function(){
 ///////////////////////////////
 
 /**
- * Returns a type by name and namespace and convert it to NIEM XML
+ * Return a type by name and namespace and convert it to NIEM XML
  *
  * <xs:complexType name="PersonType">
  *   <xs:annotation>
@@ -134,7 +134,7 @@ niemo.prototype.getStructures = function(){
  *   </xs:complexContent>
  * </xs:complexType>
  * 
- * @param {string} name - The name of the type to Returns 
+ * @param {string} name - The name of the type to Return 
  * @param {string} namespace - The namespace in which to look for the type 
  */
 
@@ -143,7 +143,8 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
     var ElementTree = et.ElementTree;
     var element = et.Element;
     var subElement = et.SubElement; 
-    
+    var localns = {};
+
     if(!namespace){
         [namespace, typeName] = typeName.split(":");
     };
@@ -157,13 +158,18 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
         "CSC":["complexType", "simpleContent"],
         "S":["simpleType", "simpleContent"]
     };
-   
+
     var root = element("xs:schema");
 
-    /*TODO Get all namespaces root.set('xmlns', 'http://www.w3.org/2005/Atom');*/
     var _cs = contentStyle[_type.ContentStyle];
     var mainElement = subElement(root, "xs:"+_cs[0]);
     mainElement.set("name", _type.TypeName);
+    
+    if(_type.IsAdapter.toLowerCase() === 'true'){
+        mainElement.set("appinfo:externalAdapterTypeIndicator", "true");
+        localns["appinfo"] = true;
+    }
+    
     var annotation = subElement(mainElement, "xs:annotation");
     var documentation = subElement(annotation, "xs:documentation");
     var content = subElement(mainElement, "xs:"+_cs[1]);
@@ -186,15 +192,17 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
         });
         if(!_type.ParentQualifiedType){
             _type.ParentQualifiedType = "structures:ObjectType"; //Default type to inherit from, I'm guessing
+            localns["structures"] = true;
         }
     }
+
     extension.set("base", _type.ParentQualifiedType);
     
     var attributes = simpleAG? subElement(extension, "xs:attributeGroup") : subElement(extension, "xs:sequence");
     if(simpleAG){
         attributes.set("ref", "structures:SimpleObjectAttributeGroup");
     }
-    var localns = {};
+    
     localns[_type.TypeNamespacePrefix] = true;
     _type.children.forEach(function(_c){
         localns[_c.TypeNamespacePrefix] = true;
@@ -205,7 +213,6 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
     })
     documentation.text = _type.Definition;
     
-
     /*Namespaces!*/
     localns = Object.keys(localns);
     var _namespaces = this.getNamespaces();
@@ -220,7 +227,7 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
                     root.set("TargetNamespace", n.VersionURI);   
                 }
                 if(n.NamespacePrefix && n.VersionURI){
-                    console.log("xmlns:"+n.NamespacePrefix, n.VersionURI);
+                    //console.log("xmlns:"+n.NamespacePrefix, n.VersionURI);
                     root.set("xmlns:"+n.NamespacePrefix, n.VersionURI);
                 }
            
@@ -244,8 +251,12 @@ niemo.prototype.createPropertyXSDElement = function(name, namespace){
     //      </xs:element>
     
     if(!namespace){
-        [namespace, name] = typeName.split(":");
+        [namespace, name] = name.split(":");
     }
+
+    const property = this.getProperty(name, namespace);
+    console.log(property);
+    console.log(this.getType(property.TypeName, property.TypeNamespacePrefix));
 
 }
 
