@@ -4,7 +4,7 @@
   "description": "NIEM conversion utilities",
   "main": "index.js",
   "scripts": {
-    "preinstall": "scripts/preinstall.js",
+    "preinstall": "node scripts/preinstall.js",
     "test": "tape test/**/*.js",
     "dev": "nodemon --exec npm test"
   },
@@ -32,6 +32,7 @@
     "htmlparser2": "^3.9.2",
     "jsonld": "^0.4.12",
     "knex": "^0.12.9",
+    "niem-releases": "git+https://github.com/TJKoury/NIEM-Releases.git",
     "pretty-data": "^0.40.0",
     "sqlite3": "^3.1.8",
     "xlsx": "^0.9.12",

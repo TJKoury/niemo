@@ -15,6 +15,6 @@ test('Create Type XSD', function (t) {
     var _xsdp = n.createPropertyXSDElement("edxl-cap:AlertAdapter");
     t.notEqual(_xsdp, null);
     if(_xsdp){
-        console.log(pd.xml(_xsdp));
+        //console.log(pd.xml(_xsdp));
     }
 });

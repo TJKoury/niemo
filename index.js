@@ -1,6 +1,6 @@
 const xlsx = require('xlsx');
 const jsonld = require('jsonld');
-const niemWorkbook = xlsx.readFile('./schemas/niem/niem.xlsx');
+const niemWorkbook = xlsx.readFile('./node_modules/niem-releases/niem.xlsx');
 const et = require('elementtree');
 const pd = require("pretty-data").pd;
 /**
@@ -204,20 +204,23 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
     }
     
     localns[_type.TypeNamespacePrefix] = true;
+    
     _type.children.forEach(function(_c){
         localns[_c.TypeNamespacePrefix] = true;
+        localns[_c.PropertyNamespacePrefix] = true;
         var _x = subElement(attributes, "xs:element");
         _x.set("ref", _c.QualifiedProperty);
         _x.set("minOccurs", _c.MinOccurs);
         _x.set("maxOccurs", _c.MaxOccurs);
-    })
+    });
+
     documentation.text = _type.Definition;
     
     /*Namespaces!*/
     localns = Object.keys(localns);
     var _namespaces = this.getNamespaces();
     _namespaces.forEach((n)=>{
-        
+        if(!n.VersionURI)console.log(n);
         if(n.NamespacePrefix === "xml" || n.NamespacePrefix === "xs" || localns.indexOf(n.NamespacePrefix)>-1){
                 if(n.NamespacePrefix === "xs"){
                     root.set("Version", n.VersionReleaseNumber);
@@ -227,8 +230,10 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
                     root.set("TargetNamespace", n.VersionURI);   
                 }
                 if(n.NamespacePrefix && n.VersionURI){
-                    //console.log("xmlns:"+n.NamespacePrefix, n.VersionURI);
                     root.set("xmlns:"+n.NamespacePrefix, n.VersionURI);
+                }else{
+                    var _import = subElement(root, "xs:import");
+                    _import.set("schemaLocation", "");
                 }
            
         }
@@ -255,8 +260,9 @@ niemo.prototype.createPropertyXSDElement = function(name, namespace){
     }
 
     const property = this.getProperty(name, namespace);
-    console.log(property);
-    console.log(this.getType(property.TypeName, property.TypeNamespacePrefix));
+    //console.log(property);
+    //console.log(this.getType(property.TypeName, property.TypeNamespacePrefix));
+    return null;
 
 }
 
