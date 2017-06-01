@@ -1,6 +1,10 @@
+const url = require('url');
+const path = require('path');
+const libxmljs = require("libxmljs");
+const fs = require('fs');
 const xlsx = require('xlsx');
 const jsonld = require('jsonld');
-const niemWorkbook = xlsx.readFile('./node_modules/niem-releases/niem.xlsx');
+const niemWorkbook = xlsx.readFile('./schemas/niem-alternateFormats/niem.xlsx');
 const et = require('elementtree');
 const pd = require("pretty-data").pd;
 /**
@@ -9,8 +13,22 @@ const pd = require("pretty-data").pd;
  * @param {string} ontology - The name of the ontology module to use
  */
 
-var niemo = function(ontology){
-    this.ontology = ontology;
+var niemo = function(){
+    this.niemRoot = "./node_modules/niem-releases/niem";
+};
+
+/**
+ * Cast string value to boolean
+ *
+ * @param {string} value - Value to cast to boolean
+ */
+
+niemo.prototype.parseBoolean = function(value){
+    if(typeof value === "boolean"){
+        return value;
+    }else{
+        return value.toLowerCase() === "true";
+    }
 };
 
 /**
@@ -165,7 +183,7 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
     var mainElement = subElement(root, "xs:"+_cs[0]);
     mainElement.set("name", _type.TypeName);
     
-    if(_type.IsAdapter.toLowerCase() === 'true'){
+    if(this.parseBoolean(_type.IsAdapter)){
         mainElement.set("appinfo:externalAdapterTypeIndicator", "true");
         localns["appinfo"] = true;
     }
@@ -219,24 +237,53 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
     /*Namespaces!*/
     localns = Object.keys(localns);
     var _namespaces = this.getNamespaces();
+    var _rootNamespacePath = _namespaces.filter((n)=>{
+        return n.NamespacePrefix === _type.TypeNamespacePrefix;
+    })[0];
+    var _relativePath = (url.parse(_rootNamespacePath.VersionURI)
+                        .path
+                        .split("/niem")[1]
+                        .split("/"))
+                        .filter((a)=>{ if(a)return a;})
+                        .map((n)=>{return '../';})
+                        .join("");
+
     _namespaces.forEach((n)=>{
-        if(!n.VersionURI)console.log(n);
+        
         if(n.NamespacePrefix === "xml" || n.NamespacePrefix === "xs" || localns.indexOf(n.NamespacePrefix)>-1){
                 if(n.NamespacePrefix === "xs"){
                     root.set("Version", n.VersionReleaseNumber);
                 }
                 if(n.NamespacePrefix === _type.TypeNamespacePrefix){
-                  
-                    root.set("TargetNamespace", n.VersionURI);   
+                    
+                    root.set("targetNamespace", n.VersionURI);   
                 }
                 if(n.NamespacePrefix && n.VersionURI){
                     root.set("xmlns:"+n.NamespacePrefix, n.VersionURI);
-                }else{
+                }else if(this.parseBoolean(n.NamespaceIsExternallyGenerated)&&
+                         !this.parseBoolean(n.IsConformant)){
+                    var _filepath = path.join('external',
+                                                n.NamespacePrefix,
+                                                n.VersionReleaseNumber,
+                                                n.NamespacePrefix+".xsd");
+                    var _xsdString = fs.readFileSync(path.join(this.niemRoot,_filepath), {encoding:'utf8'});
+                    var _externalXMLSchema = libxmljs.parseXml(_xsdString);
+                
                     var _import = subElement(root, "xs:import");
-                    _import.set("schemaLocation", "");
+                    
+                    _import.set("schemaLocation", path
+                                                 .join(
+                                                    _relativePath,
+                                                    _filepath)
+                                                .replace(/\\/g, "/"));
+
+                    _import.set("appinfo:externalAdapterTypeIndicator", "true");
+                    _import.set("namespace", (_externalXMLSchema.root()).attr("targetNamespace").value());
+                }else if(this.parseBoolean(n.NamespaceIsExternallyGenerated)){
+                    
                 }
-           
-        }
+        };
+
     });
 
     /* TODO schemaLocation */
