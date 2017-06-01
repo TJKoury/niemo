@@ -219,6 +219,7 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
     var attributes = simpleAG? subElement(extension, "xs:attributeGroup") : subElement(extension, "xs:sequence");
     if(simpleAG){
         attributes.set("ref", "structures:SimpleObjectAttributeGroup");
+        localns["structures"] = true;
     }
     
     localns[_type.TypeNamespacePrefix] = true;
@@ -247,9 +248,9 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
                         .filter((a)=>{ if(a)return a;})
                         .map((n)=>{return '../';})
                         .join("");
-
+ 
     _namespaces.forEach((n)=>{
-        
+        var _xmlRootNamespace = ["xml", "xs"].indexOf(n.NamespacePrefix)>-1;
         if(n.NamespacePrefix === "xml" || n.NamespacePrefix === "xs" || localns.indexOf(n.NamespacePrefix)>-1){
                 if(n.NamespacePrefix === "xs"){
                     root.set("Version", n.VersionReleaseNumber);
@@ -260,15 +261,29 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
                 }
                 if(n.NamespacePrefix && n.VersionURI){
                     root.set("xmlns:"+n.NamespacePrefix, n.VersionURI);
-                }else if(this.parseBoolean(n.NamespaceIsExternallyGenerated)&&
-                         !this.parseBoolean(n.IsConformant)){
-                    var _filepath = path.join('external',
-                                                n.NamespacePrefix,
-                                                n.VersionReleaseNumber,
-                                                n.NamespacePrefix+".xsd");
+                }
+                
+                var _filepath = path.join(  n.NamespacePrefix,
+                                            n.VersionReleaseNumber,
+                                            n.NamespacePrefix+".xsd");
+
+                if(this.parseBoolean(n.NamespaceIsExternallyGenerated)&&!this.parseBoolean(n.IsConformant) && !_xmlRootNamespace){
+                    _filepath = path.join(
+                                            "external",
+                                            _filepath);
                     var _xsdString = fs.readFileSync(path.join(this.niemRoot,_filepath), {encoding:'utf8'});
                     var _externalXMLSchema = libxmljs.parseXml(_xsdString);
                 
+                    var _import = subElement(root, "xs:import");
+                    
+                    _import.set("schemaLocation", 
+                                                path.join(_relativePath,_filepath).replace(/\\/g, "/"));
+
+                    _import.set("appinfo:externalAdapterTypeIndicator", "true");
+                    _import.set("namespace", (_externalXMLSchema.root()).attr("targetNamespace").value());
+                }
+                if(this.parseBoolean(n.NamespaceIsExternallyGenerated) && n.VersionURI && !_xmlRootNamespace){
+                    if(fs.existsSync(path.join(this.niemRoot,_filepath))){
                     var _import = subElement(root, "xs:import");
                     
                     _import.set("schemaLocation", path
@@ -277,10 +292,10 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
                                                     _filepath)
                                                 .replace(/\\/g, "/"));
 
-                    _import.set("appinfo:externalAdapterTypeIndicator", "true");
-                    _import.set("namespace", (_externalXMLSchema.root()).attr("targetNamespace").value());
-                }else if(this.parseBoolean(n.NamespaceIsExternallyGenerated)){
-                    
+                    _import.set("namespace", n.VersionURI);
+                    }else{
+                        new Error("File does not exist:"+path.join(this.niemRoot,_filepath));
+                    }
                 }
         };
 
