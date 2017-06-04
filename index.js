@@ -10,11 +10,10 @@ const pd = require("pretty-data").pd;
 /**
  * Represents a new niemo object.
  * @constructor
- * @param {string} ontology - The name of the ontology module to use
  */
 
 var niemo = function(){
-    this.niemRoot = "./node_modules/niem-releases/niem";
+    this.niemRootPath = "./node_modules/niem-releases/niem";
 };
 
 /**
@@ -133,10 +132,36 @@ niemo.prototype.getStructures = function(){
     return this.getTypes(false, "structures");
 };
 
+/**
+ * Create root document
+ * @param {string} format - The format of the document
+ */
+niemo.prototype.createDocument = function(format){
+    if(format === "json"){
+        return {"@context":{}};
+    }else if(format === "xml"){
+        this.ElementTree = et.ElementTree;
+        var element = et.Element;
+        return element("xs:schema");
+    }   
+}
+
+/**
+ * Serialize root document
+ * @param {object} doc    - The document
+ * @param {string} format - The format of the document
+ */
+niemo.prototype.serializeDocument = function(doc, format){
+    if(format === "json"){
+        return JSON.stringify();
+    }else if(format === "xml"){
+        return (new this.ElementTree(doc)).write({'xml_declaration': true})
+    }     
+}
 ///////////////////////////////
 
 /**
- * Return a type by name and namespace and convert it to NIEM XML
+ * Return a type by name and namespace and convert it to NIEM XSD
  *
  * <xs:complexType name="PersonType">
  *   <xs:annotation>
@@ -156,14 +181,15 @@ niemo.prototype.getStructures = function(){
  * @param {string} namespace - The namespace in which to look for the type 
  */
 
-niemo.prototype.createTypeXSDElement = function(typeName, namespace){
-
-    var ElementTree = et.ElementTree;
-    var element = et.Element;
+niemo.prototype.createTypeDocument = function(typeName, namespace, format){
+    var format =  Array.prototype.slice.call(arguments).pop();
+    if(!format){
+        throw Error("No Format Specified For: "+arguments);
+    }
     var subElement = et.SubElement; 
     var localns = {};
 
-    if(!namespace){
+    if(!arguments.length<3){
         [namespace, typeName] = typeName.split(":");
     };
 
@@ -177,7 +203,7 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
         "S":["simpleType", "simpleContent"]
     };
 
-    var root = element("xs:schema");
+    var root = this.createDocument(format);
 
     var _cs = contentStyle[_type.ContentStyle];
     var mainElement = subElement(root, "xs:"+_cs[0]);
@@ -271,7 +297,7 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
                     _filepath = path.join(
                                             "external",
                                             _filepath);
-                    var _xsdString = fs.readFileSync(path.join(this.niemRoot,_filepath), {encoding:'utf8'});
+                    var _xsdString = fs.readFileSync(path.join(this.niemRootPath,_filepath), {encoding:'utf8'});
                     var _externalXMLSchema = libxmljs.parseXml(_xsdString);
                 
                     var _import = subElement(root, "xs:import");
@@ -283,7 +309,7 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
                     _import.set("namespace", (_externalXMLSchema.root()).attr("targetNamespace").value());
                 }
                 if(this.parseBoolean(n.NamespaceIsExternallyGenerated) && n.VersionURI && !_xmlRootNamespace){
-                    if(fs.existsSync(path.join(this.niemRoot,_filepath))){
+                    if(fs.existsSync(path.join(this.niemRootPath,_filepath))){
                     var _import = subElement(root, "xs:import");
                     
                     _import.set("schemaLocation", path
@@ -294,7 +320,7 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
 
                     _import.set("namespace", n.VersionURI);
                     }else{
-                        new Error("File does not exist:"+path.join(this.niemRoot,_filepath));
+                        new Error("File does not exist:"+path.join(this.niemRootPath,_filepath));
                     }
                 }
         };
@@ -304,7 +330,7 @@ niemo.prototype.createTypeXSDElement = function(typeName, namespace){
     /* TODO schemaLocation */
     /* TODO figure out conformancetargets */
 
-    return (new ElementTree(root)).write({'xml_declaration': true});
+    return this.serializeDocument(root, format);
 
 }
 
@@ -322,8 +348,8 @@ niemo.prototype.createPropertyXSDElement = function(name, namespace){
     }
 
     const property = this.getProperty(name, namespace);
-    //console.log(property);
-    //console.log(this.getType(property.TypeName, property.TypeNamespacePrefix));
+    console.log(property);
+    //console.log(this.getProperty(property.TypeName, property.TypeNamespacePrefix));
     return null;
 
 }
