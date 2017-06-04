@@ -148,6 +148,7 @@ niemo.prototype.createDocument = function(format){
 
 /**
  * Serialize root document
+ * 
  * @param {object} doc    - The document
  * @param {string} format - The format of the document
  */
@@ -158,24 +159,12 @@ niemo.prototype.serializeDocument = function(doc, format){
         return (new this.ElementTree(doc)).write({'xml_declaration': true})
     }     
 }
+
+
 ///////////////////////////////
 
 /**
  * Return a type by name and namespace and convert it to NIEM XSD
- *
- * <xs:complexType name="PersonType">
- *   <xs:annotation>
- *     <xs:documentation>A data type for a human being.</xs:documentation>
- *   </xs:annotation>
- *   <xs:complexContent>
- *     <xs:extension base="structures:ObjectType">
- *       <xs:sequence>
- *         <xs:element ref="nc:PersonAccentText" minOccurs="0" maxOccurs="unbounded"/>
- *         ....
- *       </xs:sequence>
- *     </xs:extension>
- *   </xs:complexContent>
- * </xs:complexType>
  * 
  * @param {string} name - The name of the type to Return 
  * @param {string} namespace - The namespace in which to look for the type 
@@ -234,7 +223,7 @@ niemo.prototype.createTypeDocument = function(typeName, namespace, format){
                 _type.ParentQualifiedType = _simpleType.QualifiedType;
             }
         });
-        if(!_type.ParentQualifiedType){
+        if(!_type.ParentQualifiedType || _type.ParentQualifiedType===_type.QualifiedType){
             _type.ParentQualifiedType = "structures:ObjectType"; //Default type to inherit from, I'm guessing
             localns["structures"] = true;
         }
