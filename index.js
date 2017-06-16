@@ -168,6 +168,7 @@ niemo.prototype.serializeDocument = function(doc, format){
  * 
  * @param {string} name - The name of the type to Return 
  * @param {string} namespace - The namespace in which to look for the type 
+ * @param {string} format - The format in which to return the type document 
  */
 
 niemo.prototype.createTypeDocument = function(typeName, namespace, format){
