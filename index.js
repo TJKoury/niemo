@@ -12,7 +12,7 @@ const pd = require("pretty-data").pd;
  * @constructor
  */
 
-var niemo = function(){
+var niemo = function () {
     this.niemRootPath = "./node_modules/niem-releases/niem";
 };
 
@@ -22,10 +22,10 @@ var niemo = function(){
  * @param {string} value - Value to cast to boolean
  */
 
-niemo.prototype.parseBoolean = function(value){
-    if(typeof value === "boolean"){
+niemo.prototype.parseBoolean = function (value) {
+    if (typeof value === "boolean") {
         return value;
-    }else{
+    } else {
         return value.toLowerCase() === "true";
     }
 };
@@ -37,15 +37,15 @@ niemo.prototype.parseBoolean = function(value){
  * @param {string} namespace - The namespace in which to look for the property 
  */
 
-niemo.prototype.getProperty = function(propertyName, namespace){
-    if(!namespace){
+niemo.prototype.getProperty = function (propertyName, namespace) {
+    if (!namespace) {
         [namespace, propertyName] = propertyName.split(":");
     }
 
     var properties = xlsx.utils.sheet_to_json(niemWorkbook.Sheets["Property"]);
     var _property = null;
-    for(var p=0;p<properties.length;p++){
-        if(properties[p].PropertyName === propertyName && properties[p].PropertyNamespacePrefix === namespace){
+    for (var p = 0; p < properties.length; p++) {
+        if (properties[p].PropertyName === propertyName && properties[p].PropertyNamespacePrefix === namespace) {
             _property = properties[p];
             break;
         }
@@ -61,30 +61,30 @@ niemo.prototype.getProperty = function(propertyName, namespace){
  * @param {boolean} children - Return the children of the type as well
  */
 
-niemo.prototype.getType = function(typeName, namespace, children){
-    if(!namespace){
+niemo.prototype.getType = function (typeName, namespace, children) {
+    if (!namespace) {
         [namespace, typeName] = typeName.split(":");
     }
 
     var types = this.getTypes();
     var _type = null;
-    for(var _t=0;_t<types.length;_t++){
-        if((
-            (typeName && types[_t].TypeName === typeName ) ||
+    for (var _t = 0; _t < types.length; _t++) {
+        if ((
+            (typeName && types[_t].TypeName === typeName) ||
             (!typeName && namespace)
-           ) &&
-            namespace === types[_t].TypeNamespacePrefix){
-            
+        ) &&
+            namespace === types[_t].TypeNamespacePrefix) {
+
             _type = types[_t];
             break;
         }
     }
 
-    if(_type && children){
+    if (_type && children) {
         _type.children = [];
-        var typemap = xlsx.utils.sheet_to_json(niemWorkbook.Sheets["TypeContainsProperty"]).filter(function(a){
+        var typemap = xlsx.utils.sheet_to_json(niemWorkbook.Sheets["TypeContainsProperty"]).filter(function (a) {
             return a.TypeName === typeName && a.TypeNamespacePrefix === namespace;
-        }).forEach(function(c){
+        }).forEach(function (c) {
             _type.children.push(c);
         });
     }
@@ -96,7 +96,7 @@ niemo.prototype.getType = function(typeName, namespace, children){
  * Return all types
  */
 
-niemo.prototype.getTypes = function(){
+niemo.prototype.getTypes = function () {
     return xlsx.utils.sheet_to_json(niemWorkbook.Sheets["Type"]);
 }
 
@@ -104,7 +104,7 @@ niemo.prototype.getTypes = function(){
  * Return all properties
  */
 
-niemo.prototype.getProperties = function(){
+niemo.prototype.getProperties = function () {
     return xlsx.utils.sheet_to_json(niemWorkbook.Sheets["Property"]);
 };
 
@@ -112,7 +112,7 @@ niemo.prototype.getProperties = function(){
  * Return all facets
  */
 
-niemo.prototype.getFacets = function(){
+niemo.prototype.getFacets = function () {
     return xlsx.utils.sheet_to_json(niemWorkbook.Sheets["Facet"]);
 };
 
@@ -120,7 +120,7 @@ niemo.prototype.getFacets = function(){
  * Return all namespaces
  */
 
-niemo.prototype.getNamespaces = function(){
+niemo.prototype.getNamespaces = function () {
     return xlsx.utils.sheet_to_json(niemWorkbook.Sheets["Namespace"]);
 };
 
@@ -128,23 +128,9 @@ niemo.prototype.getNamespaces = function(){
  * Return all structures
  */
 
-niemo.prototype.getStructures = function(){
+niemo.prototype.getStructures = function () {
     return this.getTypes(false, "structures");
 };
-
-/**
- * Create root document
- * @param {string} format - The format of the document
- */
-niemo.prototype.createDocument = function(format){
-    if(format === "json"){
-        return {"@context":{}};
-    }else if(format === "xml"){
-        this.ElementTree = et.ElementTree;
-        var element = et.Element;
-        return element("xs:schema");
-    }   
-}
 
 /**
  * Serialize root document
@@ -152,12 +138,13 @@ niemo.prototype.createDocument = function(format){
  * @param {object} doc    - The document
  * @param {string} format - The format of the document
  */
-niemo.prototype.serializeDocument = function(doc, format){
-    if(format === "json"){
-        return JSON.stringify();
-    }else if(format === "xml"){
-        return (new this.ElementTree(doc)).write({'xml_declaration': true})
-    }     
+niemo.prototype.serializeDocument = function (doc, format) {
+    if (format === "json") {
+        console.log(JSON.stringify(Object.keys(doc._children[0].tag[0][0][0])));
+        return { "@context": {} };
+    } else if (format === "xml") {
+        return (new this.ElementTree(doc)).write({ 'xml_declaration': true })
+    }
 }
 
 
@@ -171,76 +158,78 @@ niemo.prototype.serializeDocument = function(doc, format){
  * @param {string} format - The format in which to return the type document 
  */
 
-niemo.prototype.createTypeDocument = function(typeName, namespace, format){
-    var format =  Array.prototype.slice.call(arguments).pop();
-    if(!format){
-        throw Error("No Format Specified For: "+arguments);
+niemo.prototype.createTypeDocument = function (typeName, namespace, format) {
+    var format = Array.prototype.slice.call(arguments).pop();
+    if (!format) {
+        throw Error("No Format Specified For: " + arguments);
     }
-    var subElement = et.SubElement; 
+    var subElement = et.SubElement;
     var localns = {};
 
-    if(!arguments.length<3){
+    if (!arguments.length < 3) {
         [namespace, typeName] = typeName.split(":");
     };
 
     var _type = this.getType(typeName, namespace, true);
-    if(!_type){
+    if (!_type) {
         return null;
     }
     var contentStyle = {
-        "CCC":["complexType", "complexContent"],
-        "CSC":["complexType", "simpleContent"],
-        "S":["simpleType", "simpleContent"]
+        "CCC": ["complexType", "complexContent"],
+        "CSC": ["complexType", "simpleContent"],
+        "S": ["simpleType", "simpleContent"]
     };
 
-    var root = this.createDocument(format);
+    this.ElementTree = et.ElementTree;
+    var element = et.Element;
+    var root = element("xs:schema");
 
     var _cs = contentStyle[_type.ContentStyle];
-    var mainElement = subElement(root, "xs:"+_cs[0]);
+    var mainElement = subElement(root, "xs:" + _cs[0]);
     mainElement.set("name", _type.TypeName);
-    
-    if(this.parseBoolean(_type.IsAdapter)){
+
+    if (this.parseBoolean(_type.IsAdapter)) {
         mainElement.set("appinfo:externalAdapterTypeIndicator", "true");
         localns["appinfo"] = true;
     }
-    
+
     var annotation = subElement(mainElement, "xs:annotation");
     var documentation = subElement(annotation, "xs:documentation");
-    var content = subElement(mainElement, "xs:"+_cs[1]);
+    var content = subElement(mainElement, "xs:" + _cs[1]);
     var extension = subElement(content, "xs:extension");
     var simpleAG = false;
-    
-    if(!_type.ParentQualifiedType){
+
+    if (!_type.ParentQualifiedType) {
         var _structures = this.getStructures();
-        _structures.forEach(function(_s){
-            if(_s.TypeName === _type.TypeName){
+        _structures.forEach(function (_s) {
+            if (_s.TypeName === _type.TypeName) {
                 _type.ParentQualifiedType = _s.QualifiedType;
             }
         });
         simpleAG = true;
         var types = this.getTypes();
-        types.forEach(function(_simpleType){
-            if(_simpleType.SimpleTypeName === _type.TypeName){
+        types.forEach(function (_simpleType) {
+            if (_simpleType.SimpleTypeName === _type.TypeName) {
                 _type.ParentQualifiedType = _simpleType.QualifiedType;
             }
         });
-        if(!_type.ParentQualifiedType || _type.ParentQualifiedType===_type.QualifiedType){
+        if (!_type.ParentQualifiedType || _type.ParentQualifiedType === _type.QualifiedType) {
             _type.ParentQualifiedType = "structures:ObjectType"; //Default type to inherit from, I'm guessing
             localns["structures"] = true;
         }
     }
 
     extension.set("base", _type.ParentQualifiedType);
-    
-    var attributes = simpleAG? subElement(extension, "xs:attributeGroup") : subElement(extension, "xs:sequence");
-    if(simpleAG){
+
+    var attributes = simpleAG ? subElement(extension, "xs:attributeGroup") : subElement(extension, "xs:sequence");
+    if (simpleAG) {
         attributes.set("ref", "structures:SimpleObjectAttributeGroup");
         localns["structures"] = true;
     }
-    
+
     localns[_type.TypeNamespacePrefix] = true;
-    
-    _type.children.forEach(function(_c){
+
+    _type.children.forEach(function (_c) {
         localns[_c.TypeNamespacePrefix] = true;
         localns[_c.PropertyNamespacePrefix] = true;
         var _x = subElement(attributes, "xs:element");
@@ -250,69 +239,69 @@ niemo.prototype.createTypeDocument = function(typeName, namespace, format){
     });
 
     documentation.text = _type.Definition;
-    
+
     /*Namespaces!*/
     localns = Object.keys(localns);
     var _namespaces = this.getNamespaces();
-    var _rootNamespacePath = _namespaces.filter((n)=>{
+    var _rootNamespacePath = _namespaces.filter((n) => {
         return n.NamespacePrefix === _type.TypeNamespacePrefix;
     })[0];
     var _relativePath = (url.parse(_rootNamespacePath.VersionURI)
-                        .path
-                        .split("/niem")[1]
-                        .split("/"))
-                        .filter((a)=>{ if(a)return a;})
-                        .map((n)=>{return '../';})
-                        .join("");
- 
-    _namespaces.forEach((n)=>{
-        var _xmlRootNamespace = ["xml", "xs"].indexOf(n.NamespacePrefix)>-1;
-        if(n.NamespacePrefix === "xml" || n.NamespacePrefix === "xs" || localns.indexOf(n.NamespacePrefix)>-1){
-                if(n.NamespacePrefix === "xs"){
-                    root.set("Version", n.VersionReleaseNumber);
-                }
-                if(n.NamespacePrefix === _type.TypeNamespacePrefix){
-                    
-                    root.set("targetNamespace", n.VersionURI);   
-                }
-                if(n.NamespacePrefix && n.VersionURI){
-                    root.set("xmlns:"+n.NamespacePrefix, n.VersionURI);
-                }
-                
-                var _filepath = path.join(  n.NamespacePrefix,
-                                            n.VersionReleaseNumber,
-                                            n.NamespacePrefix+".xsd");
+        .path
+        .split("/niem")[1]
+        .split("/"))
+        .filter((a) => { if (a) return a; })
+        .map((n) => { return '../'; })
+        .join("");
 
-                if(this.parseBoolean(n.NamespaceIsExternallyGenerated)&&!this.parseBoolean(n.IsConformant) && !_xmlRootNamespace){
-                    _filepath = path.join(
-                                            "external",
-                                            _filepath);
-                    var _xsdString = fs.readFileSync(path.join(this.niemRootPath,_filepath), {encoding:'utf8'});
-                    var _externalXMLSchema = libxmljs.parseXml(_xsdString);
-                
-                    var _import = subElement(root, "xs:import");
-                    
-                    _import.set("schemaLocation", 
-                                                path.join(_relativePath,_filepath).replace(/\\/g, "/"));
+    _namespaces.forEach((n) => {
+        var _xmlRootNamespace = ["xml", "xs"].indexOf(n.NamespacePrefix) > -1;
+        if (n.NamespacePrefix === "xml" || n.NamespacePrefix === "xs" || localns.indexOf(n.NamespacePrefix) > -1) {
+            if (n.NamespacePrefix === "xs") {
+                root.set("Version", n.VersionReleaseNumber);
+            }
+            if (n.NamespacePrefix === _type.TypeNamespacePrefix) {
 
-                    _import.set("appinfo:externalAdapterTypeIndicator", "true");
-                    _import.set("namespace", (_externalXMLSchema.root()).attr("targetNamespace").value());
-                }
-                if(this.parseBoolean(n.NamespaceIsExternallyGenerated) && n.VersionURI && !_xmlRootNamespace){
-                    if(fs.existsSync(path.join(this.niemRootPath,_filepath))){
+                root.set("targetNamespace", n.VersionURI);
+            }
+            if (n.NamespacePrefix && n.VersionURI) {
+                root.set("xmlns:" + n.NamespacePrefix, n.VersionURI);
+            }
+
+            var _filepath = path.join(n.NamespacePrefix,
+                n.VersionReleaseNumber,
+                n.NamespacePrefix + ".xsd");
+
+            if (this.parseBoolean(n.NamespaceIsExternallyGenerated) && !this.parseBoolean(n.IsConformant) && !_xmlRootNamespace) {
+                _filepath = path.join(
+                    "external",
+                    _filepath);
+                var _xsdString = fs.readFileSync(path.join(this.niemRootPath, _filepath), { encoding: 'utf8' });
+                var _externalXMLSchema = libxmljs.parseXml(_xsdString);
+
+                var _import = subElement(root, "xs:import");
+
+                _import.set("schemaLocation",
+                    path.join(_relativePath, _filepath).replace(/\\/g, "/"));
+
+                _import.set("appinfo:externalAdapterTypeIndicator", "true");
+                _import.set("namespace", (_externalXMLSchema.root()).attr("targetNamespace").value());
+            }
+            if (this.parseBoolean(n.NamespaceIsExternallyGenerated) && n.VersionURI && !_xmlRootNamespace) {
+                if (fs.existsSync(path.join(this.niemRootPath, _filepath))) {
                     var _import = subElement(root, "xs:import");
-                    
+
                     _import.set("schemaLocation", path
-                                                 .join(
-                                                    _relativePath,
-                                                    _filepath)
-                                                .replace(/\\/g, "/"));
+                        .join(
+                        _relativePath,
+                        _filepath)
+                        .replace(/\\/g, "/"));
 
                     _import.set("namespace", n.VersionURI);
-                    }else{
-                        new Error("File does not exist:"+path.join(this.niemRootPath,_filepath));
-                    }
+                } else {
+                    new Error("File does not exist:" + path.join(this.niemRootPath, _filepath));
                 }
+            }
         };
 
     });
@@ -324,7 +313,7 @@ niemo.prototype.createTypeDocument = function(typeName, namespace, format){
 
 }
 
-niemo.prototype.createPropertyXSDElement = function(name, namespace){
+niemo.prototype.createPropertyXSDElement = function (name, namespace) {
 
     // This is for Properties, to generate the xs:element found in the core xsd
     //  <xs:element name="Person" type="nc:PersonType" nillable="true">
@@ -332,8 +321,8 @@ niemo.prototype.createPropertyXSDElement = function(name, namespace){
     //         <xs:documentation>A human being.</xs:documentation>
     //         </xs:annotation>
     //      </xs:element>
-    
-    if(!namespace){
+
+    if (!namespace) {
         [namespace, name] = name.split(":");
     }
 
@@ -346,14 +335,14 @@ niemo.prototype.createPropertyXSDElement = function(name, namespace){
 
 /*TEMPLATES*/
 
-niemo.prototype.createXMLTemplate = function(name, namespace){
-    if(!namespace){
+niemo.prototype.createXMLTemplate = function (name, namespace) {
+    if (!namespace) {
         [namespace, name] = typeName.split(":");
     }
 }
 
-niemo.prototype.createJSONLDTemplate = function(){
-    
+niemo.prototype.createJSONLDTemplate = function () {
+
 }
 
 module.exports = niemo;

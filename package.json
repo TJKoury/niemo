@@ -34,7 +34,7 @@
     "jsonld": "^0.4.12",
     "knex": "^0.12.9",
     "libxmljs": "^0.18.4",
-    "niem-releases": "git+https://github.com/TJKoury/NIEM-Releases.git",
+    "niem": "git+https://github.com/DigitalArsenal/NIEM-Releases.git",
     "pretty-data": "^0.40.0",
     "sqlite3": "^3.1.8",
     "tape": "^4.6.3",
