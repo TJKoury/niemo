@@ -26,7 +26,8 @@
   "homepage": "https://github.com/TJKoury/niemo#readme",
   "devDependencies": {
     "nodemon": "^1.11.0",
-    "tape": "^4.6.3"
+    "tape": "^4.6.3",
+    "webpack-dev-server": "^2.9.3"
   },
   "dependencies": {
     "elementtree": "^0.1.7",
@@ -38,6 +39,7 @@
     "pretty-data": "^0.40.0",
     "sqlite3": "^3.1.8",
     "tape": "^4.6.3",
+    "vue": "^2.5.2",
     "xlsx": "^0.9.12",
     "xmlbuilder": "^8.2.2"
   }

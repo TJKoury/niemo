@@ -7,6 +7,8 @@ const jsonld = require('jsonld');
 const niemWorkbook = xlsx.readFile('./schemas/niem-alternateFormats/niem.xlsx');
 const et = require('elementtree');
 const pd = require("pretty-data").pd;
+const jsonLDSchema = require('./schemas/jsonld/jsonld-schema.json');
+//console.log(jsonLDSchema);
 /**
  * Represents a new niemo object.
  * @constructor
@@ -140,8 +142,13 @@ niemo.prototype.getStructures = function () {
  */
 niemo.prototype.serializeDocument = function (doc, format) {
     if (format === "json") {
-        console.log(JSON.stringify(Object.keys(doc._children[0].tag[0][0][0])));
-        return { "@context": {} };
+        let _jdoc = {};
+        _jdoc["@context"] = {};
+        for(var ns in doc.attrib){
+            _jdoc["@context"][ns] = doc.attrib[ns];
+        }
+        //console.log(JSON.stringify(doc.attrib));
+        return _jdoc;
     } else if (format === "xml") {
         return (new this.ElementTree(doc)).write({ 'xml_declaration': true })
     }
@@ -327,7 +334,7 @@ niemo.prototype.createPropertyXSDElement = function (name, namespace) {
     }
 
     const property = this.getProperty(name, namespace);
-    console.log(property);
+    //console.log(property);
     //console.log(this.getProperty(property.TypeName, property.TypeNamespacePrefix));
     return null;
 
