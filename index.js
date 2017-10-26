@@ -8,7 +8,21 @@ const niemWorkbook = xlsx.readFile('./schemas/niem-alternateFormats/niem.xlsx');
 const et = require('elementtree');
 const pd = require("pretty-data").pd;
 const jsonLDSchema = require('./schemas/jsonld/jsonld-schema.json');
-//console.log(jsonLDSchema);
+
+/**
+ * Represents all of the content styles.
+ * @property {object}  contentStyle - List of all the content styles 
+ * @property {Array<String>}  contentStyle.CCC - Array of types contained in a complex type with complex content
+ * @property {Array<String>}  contentStyle.CSC - Array of types contained in a complex type with simple content
+ * @property {Array<String>}  contentStyle.S - Array of types contained in a simple type with simple content 
+ */
+
+var contentStyle = {
+    "CCC": ["complexType", "complexContent"],
+    "CSC": ["complexType", "simpleContent"],
+    "S": ["simpleType", "simpleContent"]
+};
+
 /**
  * Represents a new niemo object.
  * @constructor
@@ -140,17 +154,34 @@ niemo.prototype.getStructures = function () {
  * @param {object} doc    - The document
  * @param {string} format - The format of the document
  */
-niemo.prototype.serializeDocument = function (doc, format) {
+niemo.prototype.serializeDocument = function (doc, data, format) {
     if (format === "json") {
+
         let _jdoc = {};
+        
         _jdoc["@context"] = {};
-        for(var ns in doc.attrib){
-            _jdoc["@context"][ns] = doc.attrib[ns];
+        
+        const nsTranslation = {
+            "targetnamespace": "@base",
+            "version": "@version"
+        };
+
+        for(let attr in data.children){
+            if(data.children[attr].PropertyName.indexOf("Nation")>-1)
+            console.log(data.children[attr].PropertyName)
+        };
+
+        for (let ns in doc.attrib) {
+            let _ns = (nsTranslation[ns.toLowerCase()] || ns);
+            _jdoc["@context"][_ns] = doc.attrib[ns];
         }
-        //console.log(JSON.stringify(doc.attrib));
+
         return _jdoc;
+
     } else if (format === "xml") {
+
         return (new this.ElementTree(doc)).write({ 'xml_declaration': true })
+
     }
 }
 
@@ -181,11 +212,6 @@ niemo.prototype.createTypeDocument = function (typeName, namespace, format) {
     if (!_type) {
         return null;
     }
-    var contentStyle = {
-        "CCC": ["complexType", "complexContent"],
-        "CSC": ["complexType", "simpleContent"],
-        "S": ["simpleType", "simpleContent"]
-    };
 
     this.ElementTree = et.ElementTree;
     var element = et.Element;
@@ -316,7 +342,7 @@ niemo.prototype.createTypeDocument = function (typeName, namespace, format) {
     /* TODO schemaLocation */
     /* TODO figure out conformancetargets */
 
-    return this.serializeDocument(root, format);
+    return this.serializeDocument(root, _type, format);
 
 }
 
