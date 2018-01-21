@@ -167,8 +167,8 @@ niemo.prototype.serializeDocument = function (doc, data, format) {
         };
 
         for(let attr in data.children){
-            if(data.children[attr].PropertyName.indexOf("Nation")>-1)
-            console.log(data.children[attr].PropertyName)
+            if(data.children[attr].PropertyName.indexOf("Person")>-1)
+            console.log(data.children[attr])
         };
 
         for (let ns in doc.attrib) {

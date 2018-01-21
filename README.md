@@ -34,3 +34,8 @@ Also, for John Smith, the property “PersonBirthDate” may have a value of “
 
 An object may have a unique ID within an XML instance, but it is not required to have a
 globally unique identifier.
+
+#TODO
+
+- [ ] Build JSON-Schema 'definitions' from all the attributes belonging to each type
+- [ ] Build JSON-Schema 'properties' that reference the definitions
