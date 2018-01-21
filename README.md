@@ -38,4 +38,4 @@ globally unique identifier.
 #TODO
 
 - [ ] Build JSON-Schema 'definitions' from all the attributes belonging to each type
-- [ ] Build JSON-Schema 'properties' that reference the definitions
+- [ ] Build JSON-Schema 'properties' that reference the definitions.  This is what the 'typecontainsproperty' sheet is for!!!
