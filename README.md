@@ -1,5 +1,6 @@
 # niemo
 Conversion utilities for the [National Information Exchange Model (NIEM)](https://www.niem.gov/)
+Have to use it [DODI](http://www.esd.whs.mil/Portals/54/Documents/DD/issuances/dodi/832007p.pdf)
 
 ## Overview
 
